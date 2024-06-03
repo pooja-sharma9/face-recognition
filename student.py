@@ -1,4 +1,4 @@
-
+import re
 from tkinter import* 
 from tkinter import ttk
 from PIL import Image,ImageTk
@@ -113,11 +113,18 @@ class Student:
         class_Student_frame = LabelFrame(left_frame,bd=2,bg="snow",relief=RIDGE,text="Class Student Information",font=("verdana",12,"bold"),fg="red")
         class_Student_frame.place(x=10,y=160,width=635,height=230)
 
+        def testVal(inStr,acttyp):
+            if acttyp == '1': #insert
+                if not inStr.isdigit():
+                    return False
+            return True
+
         #Student id
         studentId_label = Label(class_Student_frame,text="Std-ID:",font=("verdana",11,"bold"),fg="navyblue",bg="snow")
         studentId_label.grid(row=0,column=0,padx=5,pady=5,sticky=W)
 
-        studentId_entry = ttk.Entry(class_Student_frame,textvariable=self.var_std_id,width=15,font=("verdana",11,"bold"))
+        studentId_entry = ttk.Entry(class_Student_frame,textvariable=self.var_std_id,validate="key",width=15,font=("verdana",11,"bold"))
+        studentId_entry['validatecommand'] = (studentId_entry.register(testVal),'%P','%d')
         studentId_entry.grid(row=0,column=1,padx=5,pady=5,sticky=W)
 
         #Student name
@@ -140,11 +147,7 @@ class Student:
         student_roll_label = Label(class_Student_frame,text="Roll-No:",font=("verdana",11,"bold"),fg="navyblue",bg="snow")
         student_roll_label.grid(row=1,column=2,padx=5,pady=5,sticky=W)
 
-        def testVal(inStr,acttyp):
-            if acttyp == '1': #insert
-                if not inStr.isdigit():
-                    return False
-            return True
+        
 
         student_roll_entry = ttk.Entry(class_Student_frame,textvariable=self.var_roll,validate="key",width=15,font=("verdana",11,"bold"))
         student_roll_entry['validatecommand'] = (student_roll_entry.register(testVal),'%P','%d')
@@ -179,7 +182,8 @@ class Student:
         student_mob_label = Label(class_Student_frame,text="Mob-No:",font=("verdana",11,"bold"),fg="navyblue",bg="snow")
         student_mob_label.grid(row=3,column=2,padx=5,pady=5,sticky=W)
 
-        student_mob_entry = ttk.Entry(class_Student_frame,textvariable=self.var_mob,width=15,font=("verdana",11,"bold"))
+        student_mob_entry = ttk.Entry(class_Student_frame,textvariable=self.var_mob,validate="key",width=15,font=("verdana",11,"bold"))
+        student_mob_entry['validatecommand'] = (student_mob_entry.register(testVal),'%P','%d')
         student_mob_entry.grid(row=3,column=3,padx=2,pady=5,sticky=W)
 
         #Address
@@ -320,33 +324,46 @@ class Student:
         if self.var_dep.get()=="Select Department" or self.var_course.get=="Select Course" or self.var_year.get()=="Select Year" or self.var_semester.get()=="Select Semester" or self.var_std_id.get()=="" or self.var_std_name.get()=="" or self.var_div.get()=="" or self.var_roll.get()=="" or self.var_gender.get()=="" or self.var_dob.get()=="" or self.var_email.get()=="" or self.var_mob.get()=="" or self.var_address.get()=="" or self.var_teacher.get()=="":
             messagebox.showerror("Error","All Fields are Required!",parent=self.root)
         else:
-            try:
-                conn = mysql.connector.connect(username='root', password='',host='localhost',database='face_reco')
-                mycursor = conn.cursor()
-                mycursor.execute("insert into student values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",(
-                self.var_std_id.get(),
-                self.var_roll.get(),
-                self.var_std_name.get(),
-                self.var_dep.get(),
-                self.var_course.get(),
-                self.var_year.get(),
-                self.var_semester.get(),
-                self.var_div.get(),
-                self.var_gender.get(),
-                self.var_dob.get(),
-                self.var_mob.get(),
-                self.var_address.get(),
-                self.var_email.get(),
-                self.var_teacher.get(),
-                self.var_radio1.get()
-                ))
+            if (re.search(r'[a-zA-Z]*\d+[a-zA-Z]*', self.var_std_name.get())):
+                messagebox.showerror('Error','Numbers are not allowed with alphabets in the name!')
+            else:
+                if len(self.var_mob.get()) != 10:
+                    messagebox.showerror('Error', 'Contact Number must be 10 digits', parent=self.root)
+                else:
+                    if (re.search(r'^\d{10}$', self.var_mob.get())):
+                        regex = r'^(\w|\.|\_|\-)+[@](\w|\_|\-|\.)+[.]\w{2,3}$' 
+                        if (re.search(regex, self.var_email.get())):
+                            try:
+                                conn = mysql.connector.connect(username='root', password='',host='localhost',database='face_reco')
+                                mycursor = conn.cursor()
+                                mycursor.execute("insert into student values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",(
+                                self.var_std_id.get(),
+                                self.var_roll.get(),
+                                self.var_std_name.get(),
+                                self.var_dep.get(),
+                                self.var_course.get(),
+                                self.var_year.get(),
+                                self.var_semester.get(),
+                                self.var_div.get(),
+                                self.var_gender.get(),
+                                self.var_dob.get(),
+                                self.var_mob.get(),
+                                self.var_address.get(),
+                                self.var_email.get(),
+                                self.var_teacher.get(),
+                                self.var_radio1.get()
+                                ))
 
-                conn.commit()
-                self.fetch_data()
-                conn.close()
-                messagebox.showinfo("Success","All Records are Saved!",parent=self.root)
-            except Exception as es:
-                messagebox.showerror("Error",f"Due to: {str(es)}",parent=self.root)
+                                conn.commit()
+                                self.fetch_data()
+                                conn.close()
+                                messagebox.showinfo("Success","All Records are Saved!",parent=self.root)
+                            except Exception as es:
+                                messagebox.showerror("Error",f"Due to: {str(es)}",parent=self.root)
+                        else:
+                            messagebox.showerror('Error', 'Please Enter the Valid Email Address',parent=self.root)
+                    else:
+                        messagebox.showerror('Error', 'Invalid Phone number', parent=self.root)
                 
 	# ===========================Fetch data form database to table ================================
 
@@ -392,37 +409,50 @@ class Student:
         if self.var_dep.get()=="Select Department" or self.var_course.get=="Select Course" or self.var_year.get()=="Select Year" or self.var_semester.get()=="Select Semester" or self.var_std_id.get()=="" or self.var_std_name.get()=="" or self.var_div.get()=="" or self.var_roll.get()=="" or self.var_gender.get()=="" or self.var_dob.get()=="" or self.var_email.get()=="" or self.var_mob.get()=="" or self.var_address.get()=="" or self.var_teacher.get()=="":
             messagebox.showerror("Error","Please Fill All Fields are Required!",parent=self.root)
         else:
-            try:
-                Update=messagebox.askyesno("Update","Do you want to Update this Student Details!",parent=self.root)
-                if Update > 0:
-                    conn = mysql.connector.connect(username='root', password='',host='localhost',database='face_reco')
-                    mycursor = conn.cursor()
-                    mycursor.execute("update student set Roll_No=%s,Name=%s,Department=%s,Course=%s,Year=%s,Semester=%s,Division=%s,Gender=%s,DOB=%s,Mobile_No=%s,Address=%s,Email=%s,Teacher_Name=%s,PhotoSample=%s where Student_ID=%s",( 
-                    self.var_roll.get(),
-                    self.var_std_name.get(),
-                    self.var_dep.get(),
-                    self.var_course.get(),
-                    self.var_year.get(),
-                    self.var_semester.get(),
-                    self.var_div.get(),
-                    self.var_gender.get(),
-                    self.var_dob.get(),
-                    self.var_mob.get(),
-                    self.var_address.get(),
-                    self.var_email.get(),
-                    self.var_teacher.get(),
-                    self.var_radio1.get(),
-                    self.var_std_id.get()   
-                    ))
+            if (re.search(r'[a-zA-Z]*\d+[a-zA-Z]*', self.var_std_name.get())):
+                messagebox.showerror('Error','Numbers are not allowed with alphabets in the name!')
+            else:
+                if len(self.var_mob.get()) != 10:
+                    messagebox.showerror('Error', 'Contact Number must be 10 digits', parent=self.root)
                 else:
-                    if not Update:
-                        return
-                messagebox.showinfo("Success","Successfully Updated!",parent=self.root)
-                conn.commit()
-                self.fetch_data()
-                conn.close()
-            except Exception as es:
-                messagebox.showerror("Error",f"Due to: {str(es)}",parent=self.root)
+                    if (re.search(r'^\d{10}$', self.var_mob.get())):
+                        regex = r'^(\w|\.|\_|\-)+[@](\w|\_|\-|\.)+[.]\w{2,3}$' 
+                        if (re.search(regex, self.var_email.get())):
+                            try:
+                                Update=messagebox.askyesno("Update","Do you want to Update this Student Details!",parent=self.root)
+                                if Update > 0:
+                                    conn = mysql.connector.connect(username='root', password='',host='localhost',database='face_reco')
+                                    mycursor = conn.cursor()
+                                    mycursor.execute("update student set Roll_No=%s,Name=%s,Department=%s,Course=%s,Year=%s,Semester=%s,Division=%s,Gender=%s,DOB=%s,Mobile_No=%s,Address=%s,Email=%s,Teacher_Name=%s,PhotoSample=%s where Student_ID=%s",( 
+                                    self.var_roll.get(),
+                                    self.var_std_name.get(),
+                                    self.var_dep.get(),
+                                    self.var_course.get(),
+                                    self.var_year.get(),
+                                    self.var_semester.get(),
+                                    self.var_div.get(),
+                                    self.var_gender.get(),
+                                    self.var_dob.get(),
+                                    self.var_mob.get(),
+                                    self.var_address.get(),
+                                    self.var_email.get(),
+                                    self.var_teacher.get(),
+                                    self.var_radio1.get(),
+                                    self.var_std_id.get()   
+                                    ))
+                                else:
+                                    if not Update:
+                                        return
+                                messagebox.showinfo("Success","Successfully Updated!",parent=self.root)
+                                conn.commit()
+                                self.fetch_data()
+                                conn.close()
+                            except Exception as es:
+                                messagebox.showerror("Error",f"Due to: {str(es)}",parent=self.root)
+                        else:
+                            messagebox.showerror('Error', 'Please Enter the Valid Email Address',parent=self.root)
+                    else:
+                        messagebox.showerror('Error', 'Invalid Phone number', parent=self.root)
 
 #==============================Delete Function=========================================
     def delete_data(self):
@@ -476,7 +506,6 @@ class Student:
                 my_cursor = conn.cursor()
                 sql = "SELECT Student_ID,Roll_No,Name,Department,Course,Year,Semester,Division,Gender,DOB,Mobile_No,Address,Email,Teacher_Name,PhotoSample FROM student where Roll_No='" +str(self.var_search.get()) + "'" 
                 my_cursor.execute(sql)
-                # my_cursor.execute("select * from student where Roll_No= " +str(self.var_search.get())+" "+str(self.var_searchTX.get())+"")
                 rows=my_cursor.fetchall()        
                 if len(rows)!=0:
                     self.student_table.delete(*self.student_table.get_children())
