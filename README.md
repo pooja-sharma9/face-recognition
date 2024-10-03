@@ -1,5 +1,5 @@
 # face-recognition
 
 # using -
-Python language 
-Machine learning 
+Python language and 
+Machine Learning 
